@@ -5,8 +5,20 @@ using API.Interface;
 
 namespace API.Data;
 
+/// <summary>
+/// Repository implementation for member-related data operations
+/// </summary>
 public class MemberRepository(AppDbContext context) : IMemberRepository
 {
+    /// <summary>
+    /// Retrieves a paginated list of members with filtering options
+    /// - Excludes current member from results
+    /// - Filters by gender if specified
+    /// - Filters by age range
+    /// - Orders by created date or last active date
+    /// </summary>
+    /// <param name="memberParams">Parameters for filtering and pagination</param>
+    /// <returns>A paginated result of filtered members</returns>
     public async Task<PaginatedResult<Member>> GetMembersAsync(MemberParams memberParams)
     {
         var query = context.Members.AsQueryable();

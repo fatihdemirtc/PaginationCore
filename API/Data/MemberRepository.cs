@@ -1,0 +1,33 @@
+using System;
+using API.Entity;
+using API.Helper;
+using API.Interface;
+
+namespace API.Data;
+
+public class MemberRepository(AppDbContext context) : IMemberRepository
+{
+    public async Task<PaginatedResult<Member>> GetMembersAsync(MemberParams memberParams)
+    {
+        var query = context.Members.AsQueryable();
+        query = query.Where(x => x.Id != memberParams.CurrentMemberId);
+
+        if (memberParams.Gender != null)
+        {
+            query = query.Where(x => x.Gender == memberParams.Gender);
+        }
+
+        var minDob = DateOnly.FromDateTime(DateTime.Today.AddYears(-memberParams.MaxAge - 1));
+        var maxDob = DateOnly.FromDateTime(DateTime.Today.AddYears(-memberParams.MinAge));
+
+        query = query.Where(x => x.DateOfBirth >= minDob && x.DateOfBirth <= maxDob);
+
+        query = memberParams.OrderBy switch
+        {
+            "created" => query.OrderByDescending(x => x.Created),
+            _ => query.OrderByDescending(x => x.LastActive)
+        };
+        return await PaginationHelper.CreateAsync(query, memberParams.PageNumber, memberParams.PageSize);
+    }
+
+}
